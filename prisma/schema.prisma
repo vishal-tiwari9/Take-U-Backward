@@ -1,0 +1,158 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String             @id @default(cuid())
+  name             String?
+  email            String             @unique
+  emailVerified    DateTime?
+  image            String?
+  password         String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  accounts         Account[]
+  sessions         Session[]
+  resumeAnalyses   ResumeAnalysis[]
+  linkedInAnalyses LinkedInAnalysis[]
+  projectRewrites  ProjectRewrite[]
+  mockInterviews   MockInterview[]
+  outreachMessages OutreachMessage[]
+  mentorSessions   MentorSession[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model ResumeAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  fileName        String
+  atsScore        Int
+  overallFeedback String
+  result          Json // full Groq response stored as JSON
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LinkedInAnalysis {
+  id           String   @id @default(cuid())
+  userId       String
+  currentRole  String
+  targetRoles  String
+  overallScore Int
+  result       Json
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProjectRewrite {
+  id          String   @id @default(cuid())
+  userId      String
+  projectName String
+  result      Json
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MockInterview {
+  id            String   @id @default(cuid())
+  userId        String
+  role          String
+  interviewType String
+  difficulty    String
+  result        Json
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OutreachMessage {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  messageType    String
+  tone           String
+  targetRole     String
+  companyName    String
+  hiringManager  String?
+  jobUrl         String?
+  jobDescription String?
+  userProjects   String
+  userUSP        String
+  extraContext   String?
+
+  generatedText String
+  subject       String?
+  charCount     Int
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model MentorSession {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// One of: LearningPath | Placement | TimeMgmt | FuturePredict
+  topic String
+
+  /// Title the user gave or AI generated for this session
+  title String
+
+  /// Full structured response from the AI — stored as JSON
+  content Json
+
+  /// Raw messages array [{role, content}] for conversation replay
+  messages Json @default("[]")
+
+  /// Market signals snapshot injected at generation time
+  marketSignals Json @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, topic, createdAt])
+}
