@@ -1,4 +1,4 @@
-# TalentOS 🎓
+# TakeUBackward 🎓
 
 > Your Complete Placement Pipeline — AI-powered resume scoring, LinkedIn optimization, project rewriting, and mock interviews.
 
@@ -53,7 +53,7 @@ src/
 ### 1. Clone & install
 
 ```bash
-git clone <your-repo>
+git clone <https://github.com/vishal-tiwari9/Take-U-Backward.git>
 cd talentos
 npm install
 ```
